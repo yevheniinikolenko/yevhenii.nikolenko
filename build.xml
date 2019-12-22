@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     22 дек. 2019 г. 17:40:17                                                        
+
+     usermanagment    
+     description
+                                                           
+     ====================================================================== -->
+<project name="usermanagment" basedir="." default="test">
+	 <property name="test-java-dir" value="${basedir}/src/test/java/"/>
+	    <property name="test-resources-dir" value="${basedir}/src/test/resources"/>
+
+	    <property name="main-java-dir" value="${basedir}/src/main/java/"/>
+	    <property name="main-webapp-dir" value="${basedir}/src/main/webapp"/>
+	    <property name="main-webapp-webinf-dir" value="${main-webapp-dir}/WEB-INF"/>
+	    <property name="main-resources-dir" value="${basedir}/src/main/resources"/>
+
+	    <property name="build-dir" value="${basedir}/target"/>
+	    <property name="classes-dir" value="${build-dir}/classes"/>
+	    <property name="test-result-dir" value="${build-dir}/test-result"/>
+	    <property name="lib-dir" value="${basedir}/lib"/>
+
+	    <property name="war-name" value="users"/>
+	    <property name="war-dir" value="${build-dir}/${war-name}"/>
+	    <property name="war-jsp-dir" value="${war-dir}"/>
+	    <property name="war-webinf-dir" value="${war-dir}/WEB-INF"/>
+	    <property name="war-lib-dir" value="${war-webinf-dir}/lib"/>
+	    <property name="war-classes-dir" value="${war-webinf-dir}/classes"/>
+
+	    <property name="ant-build-javac-source" value="1.8"/>
+	    <property name="ant-build-javac-target" value="1.8"/>
+
+	    <target name="clean">
+	        <delete dir="${build-dir}" failonerror="no"/>
+	    </target>
+
+	    <target name="init" depends="clean">
+	        <mkdir dir="${build-dir}"/>
+	        <mkdir dir="${classes-dir}"/>
+	    </target>
+
+	    <target name="compile" depends="init">
+	        <javac target="${ant-build-javac-target}" srcdir="${main-java-dir}" destdir="${classes-dir}" includeantruntime="false">
+	            <classpath>
+	                <fileset dir="${lib-dir}"/>
+	            </classpath>
+	        </javac>
+	        <copy todir="${classes-dir}">
+	            <fileset dir="${main-resources-dir}">
+	                <include name="**/*.properties"/>
+	                <include name="**/*.xml"/>
+	            </fileset>
+	        </copy>
+	    </target>
+
+	    <target name="war.exploded" depends="clean,compile">
+
+	        <copy todir="${war-jsp-dir}">
+	            <fileset dir="${main-webapp-dir}"/>
+	        </copy>
+
+	        <copy todir="${war-lib-dir}">
+	            <fileset dir="${lib-dir}">
+	                <include name="hsqldb*.jar"/>
+	                <include name="jstl*.jar"/>
+	                <include name="standard*.jar"/>
+	            </fileset>
+	        </copy>
+
+	        <copy todir="${war-classes-dir}">
+	            <fileset dir="${main-resources-dir}"/>
+	        </copy>
+
+	        <copy todir="${war-classes-dir}">
+	            <fileset dir="${classes-dir}"/>
+	        </copy>
+	    </target>
+
+	    <target name="war" depends="war.exploded">
+	        <delete file="${build-dir}/${war-name}.war" failonerror="no"/>
+	        <war destfile="${build-dir}/${war-name}.war" webxml="${main-webapp-webinf-dir}/web.xml">
+	            <fileset dir="${war-jsp-dir}">
+	                <exclude name="WEB-INF/*.*"/>
+	            </fileset>
+	            <classes dir="${war-classes-dir}"/>
+	            <lib dir="${war-lib-dir}"/>
+	            <webinf dir="${war-webinf-dir}">
+	                <exclude name="web.xml"/>
+	            </webinf>
+	        </war>
+	    </target>
+
+	    <target name="test-compile" depends="compile">
+	        <javac target="${ant-build-javac-target}" srcdir="${test-java-dir}" destdir="${classes-dir}" includeantruntime="false">
+	            <classpath>
+	                <fileset dir="${lib-dir}"/>
+	            </classpath>
+	        </javac>
+	        <copy todir="${classes-dir}">
+	            <fileset dir="${test-resources-dir}">
+	                <include name="**/*.properties"/>
+	                <include name="**/*.xml"/>
+	            </fileset>
+	        </copy>
+	    </target>
+
+	    <target name="test" depends="test-compile">
+	        <mkdir dir="${test-result-dir}"/>
+	        <junit printsummary="yes" haltonfailure="no">
+	            <classpath>
+	                <pathelement location="${classes-dir}"/>
+	                <fileset dir="${lib-dir}"/>
+	            </classpath>
+	            <formatter type="plain"/>
+	            <batchtest todir="${test-result-dir}" fork="yes">
+	                <fileset dir="${test-java-dir}">
+	                    <include name="**/*Test.java"/>
+	                    <exclude name="**/acceptance/*Test.java"/>
+	                </fileset>
+	            </batchtest>
+	        </junit>
+	    </target>
+</project>
